@@ -1,16 +1,38 @@
-const http = require("http");
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const app = express();
+const connectDB = require("./confing/db");
 
-const PORT = 3000;
+app.use(cors());
+app.use(express.json());
 
-// Create the server and store it in a variable
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("Hello from the HTTP server!"); // Add this line
+app.post("/books", async (req, res) => {
+  const { title } = req.body;
+  try {
+    const book = new Book({ title });
+    await book.save();
+    res.status(201).json(book);
+  } catch (error) {
+    console.error("Error creating book:", error);
+    res.status(500).json({ error: "Failed to create book" });
+  }
 });
-
-// Call .listen on the server instance
-server.listen(PORT, function () {
-  console.log(`Server is running on port ${PORT}`);
-  console.log("Press Ctrl+C to stop the server.");
-  console.log("You can access it at http://localhost:" + PORT);
+app.get("/books", async (req, res) => {
+  try {
+    const books = await Book.find();
+    res.status(200).json(books);
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    res.status(500).json({ error: "Failed to fetch books" });
+  }
 });
+connectDB()
+  .then(() => {
+    app.listen(5000, function () {
+      console.log("Server is running on port 5000");
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to DB:", err);
+  });
